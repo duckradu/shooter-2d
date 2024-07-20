@@ -8,8 +8,8 @@ const WINDOW_HEIGHT: f32 = 700.0;
 const WINDOW_BG_COLOR: (u8, u8, u8) = (197, 204, 184);
 
 const SPRITE_SHEET_PATH: &str = "assets.png";
-const SPRITE_SHEET_WIDTH: usize = 4;
-const SPRITE_SHEET_HEIGTH: usize = 4;
+const SPRITE_SHEET_WIDTH: usize = 8;
+const SPRITE_SHEET_HEIGTH: usize = 8;
 
 const SPRITE_SCALE_FACTOR: f32 = 3.0;
 

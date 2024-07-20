@@ -5,6 +5,7 @@ use bevy::math::{vec2, vec3};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::window::PrimaryWindow;
+use bevy_pancam::{PanCam, PanCamPlugin};
 use rand::Rng;
 
 // Window
@@ -91,6 +92,8 @@ fn main() {
             WINDOW_BG_COLOR.2,
         )))
         .insert_resource(Msaa::Off)
+        // External plugins
+        .add_plugins(PanCamPlugin::default())
         // Custom resources
         .insert_resource(GlobalTextureAtlasHandle(None))
         .insert_resource(GlobalSpriteSheetHandle(None))
@@ -144,7 +147,9 @@ fn load_assets(
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands
+        .spawn(Camera2dBundle::default())
+        .insert(PanCam::default());
 }
 
 fn init_world(

@@ -15,6 +15,24 @@ const SPRITE_SCALE_FACTOR: f32 = 3.0;
 const TILE_WIDTH: usize = 16;
 const TILE_HEIGHT: usize = 16;
 
+// Resources
+#[derive(Resource)]
+struct GlobalTextureAtlasHandle(Option<Handle<TextureAtlasLayout>>);
+#[derive(Resource)]
+struct GlobalSpriteSheetHandle(Option<Handle<Image>>);
+
+// Components
+#[derive(Component)]
+struct Player;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum GameState {
+    #[default]
+    Loading,
+    Bootstraping,
+    Playing,
+}
+
 fn main() {
     App::new()
         .add_plugins(
@@ -36,40 +54,62 @@ fn main() {
             WINDOW_BG_COLOR.2,
         )))
         .insert_resource(Msaa::Off)
+        // Custom resources
+        .insert_resource(GlobalTextureAtlasHandle(None))
+        .insert_resource(GlobalSpriteSheetHandle(None))
+        // Plugins
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
-        .add_systems(Startup, (setup_camera, spawn_player))
+        // Game state
+        .init_state::<GameState>()
+        // Systems
+        .add_systems(OnEnter(GameState::Loading), load_assets)
+        .add_systems(OnEnter(GameState::Bootstraping), (setup_camera, init_world))
+        // .add_systems(Startup, (setup_camera, spawn_player))
         .run();
 }
 
-fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
-}
-
-fn spawn_player(
-    mut commands: Commands,
+fn load_assets(
+    mut texture_atlas: ResMut<GlobalTextureAtlasHandle>,
+    mut image_handle: ResMut<GlobalSpriteSheetHandle>,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let texture: Handle<Image> = asset_server.load(SPRITE_SHEET_PATH);
-    let layout = TextureAtlasLayout::from_grid(
+    image_handle.0 = Some(asset_server.load(SPRITE_SHEET_PATH));
+
+    let texture_atlas_layout = TextureAtlasLayout::from_grid(
         UVec2::new(TILE_WIDTH as u32, TILE_HEIGHT as u32),
         SPRITE_SHEET_WIDTH as u32,
         SPRITE_SHEET_HEIGTH as u32,
         None,
         None,
     );
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
-    commands.spawn({
-        SpriteSheetBundle {
-            texture,
-            atlas: TextureAtlas {
-                layout: texture_atlas_layout,
-                index: 0,
-            },
+    texture_atlas.0 = Some(texture_atlas_layouts.add(texture_atlas_layout));
+
+    next_state.set(GameState::Bootstraping)
+}
+
+fn setup_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+}
+
+fn init_world(
+    mut commands: Commands,
+    texture_atlas: Res<GlobalTextureAtlasHandle>,
+    image_handle: Res<GlobalSpriteSheetHandle>,
+) {
+    commands.spawn((
+        SpriteBundle {
+            texture: image_handle.0.clone().unwrap(),
             transform: Transform::from_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
             ..default()
-        }
-    });
+        },
+        TextureAtlas {
+            layout: texture_atlas.0.clone().unwrap(),
+            index: 0,
+        },
+        Player,
+    ));
 }

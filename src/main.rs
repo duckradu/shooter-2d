@@ -6,25 +6,29 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::window::PrimaryWindow;
 
+// Window
 const WINDOW_WIDTH: f32 = 1200.0;
 const WINDOW_HEIGHT: f32 = 700.0;
 
 const WINDOW_BG_COLOR: (u8, u8, u8) = (197, 204, 184);
 
+// Spritesheet
 const SPRITE_SHEET_PATH: &str = "assets.png";
 const SPRITE_SHEET_WIDTH: usize = 8;
 const SPRITE_SHEET_HEIGTH: usize = 8;
 
 const SPRITE_SCALE_FACTOR: f32 = 3.0;
 
+// Tiles
 const TILE_WIDTH: usize = 16;
 const TILE_HEIGHT: usize = 16;
 
 // Player
 const PLAYER_SPEED: f32 = 2.0;
 
-// Weapon
+// Projectile
 const PROJECTILE_SPAWN_INTERVAL: f32 = 0.1;
+const PROJECTILE_SPEED: f32 = 15.0;
 
 // Resources
 #[derive(Resource)]
@@ -48,6 +52,9 @@ struct WeaponTimer(Stopwatch);
 
 #[derive(Component)]
 struct Projectile;
+
+#[derive(Component)]
+struct ProjectileDirection(Vec3);
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
@@ -95,6 +102,7 @@ fn main() {
             (
                 update_cursor_position,
                 update_weapon_transform,
+                update_projectile,
                 handle_player_input,
                 handle_weapon_input,
             )
@@ -229,6 +237,8 @@ fn handle_weapon_input(
     if weapon_timer.0.elapsed_secs() >= PROJECTILE_SPAWN_INTERVAL {
         weapon_timer.0.reset();
 
+        let projectile_direction = weapon_transform.local_x();
+
         commands.spawn((
             SpriteBundle {
                 texture: image_handle.0.clone().unwrap(),
@@ -245,6 +255,7 @@ fn handle_weapon_input(
                 index: 16,
             },
             Projectile,
+            ProjectileDirection(*projectile_direction),
         ));
     }
 }
@@ -299,4 +310,17 @@ fn update_weapon_transform(
         new_weapon_position.y,
         weapon_transform.translation.z,
     );
+}
+
+fn update_projectile(
+    mut projectile_query: Query<(&mut Transform, &ProjectileDirection), With<Projectile>>,
+) {
+    if projectile_query.is_empty() {
+        return;
+    }
+
+    for (mut t, dir) in projectile_query.iter_mut() {
+        t.translation += dir.0.normalize() * Vec3::splat(PROJECTILE_SPEED);
+        t.translation.z = 10.0;
+    }
 }

@@ -109,6 +109,7 @@ fn main() {
         .add_systems(
             Update,
             (
+                update_camera_position,
                 update_cursor_position,
                 update_weapon_transform,
                 update_projectile,
@@ -293,6 +294,22 @@ fn handle_weapon_input(
             ProjectileDirection(*projectile_direction),
         ));
     }
+}
+
+fn update_camera_position(
+    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<Camera>, Without<Player>)>,
+) {
+    if camera_query.is_empty() || player_query.is_empty() {
+        return;
+    }
+
+    let mut camera_transform = camera_query.single_mut();
+    let player_transform = player_query.single().translation;
+
+    camera_transform.translation = camera_transform
+        .translation
+        .lerp(vec3(player_transform.x, player_transform.y, 0.0), 0.1);
 }
 
 fn update_cursor_position(

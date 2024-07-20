@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::math::{vec2, vec3};
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use bevy::window::PrimaryWindow;
 
 const WINDOW_WIDTH: f32 = 1200.0;
@@ -22,6 +23,9 @@ const TILE_HEIGHT: usize = 16;
 // Player
 const PLAYER_SPEED: f32 = 2.0;
 
+// Weapon
+const PROJECTILE_SPAWN_INTERVAL: f32 = 0.1;
+
 // Resources
 #[derive(Resource)]
 struct GlobalTextureAtlasHandle(Option<Handle<TextureAtlasLayout>>);
@@ -38,6 +42,12 @@ struct Player;
 
 #[derive(Component)]
 struct Weapon;
+
+#[derive(Component)]
+struct WeaponTimer(Stopwatch);
+
+#[derive(Component)]
+struct Projectile;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
@@ -84,8 +94,9 @@ fn main() {
             Update,
             (
                 update_cursor_position,
-                handle_input,
                 update_weapon_transform,
+                handle_player_input,
+                handle_weapon_input,
             )
                 .run_if(in_state(GameState::Playing)),
         )
@@ -147,30 +158,13 @@ fn init_world(
             index: 17,
         },
         Weapon,
+        WeaponTimer(Stopwatch::new()),
     ));
 
     next_state.set(GameState::Playing);
 }
 
-fn update_cursor_position(
-    mut cursor_position: ResMut<CursorPosition>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<Camera>>,
-) {
-    if window_query.is_empty() || camera_query.is_empty() {
-        cursor_position.0 = None;
-    }
-
-    let (camera, camera_transform) = camera_query.single();
-    let window = window_query.single();
-
-    cursor_position.0 = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
-}
-
-fn handle_input(
+fn handle_player_input(
     mut player_query: Query<&mut Transform, With<Player>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
@@ -209,6 +203,68 @@ fn handle_input(
     if delta.is_finite() && (up_key || right_key || down_key || left_key) {
         transform.translation += vec3(delta.x, delta.y, 0.0) * PLAYER_SPEED;
     }
+}
+
+fn handle_weapon_input(
+    mut commands: Commands,
+    time: Res<Time>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+    texture_atlas: Res<GlobalTextureAtlasHandle>,
+    image_handle: Res<GlobalSpriteSheetHandle>,
+    mut weapon_query: Query<(&Transform, &mut WeaponTimer), With<Weapon>>,
+) {
+    if weapon_query.is_empty() {
+        return;
+    }
+
+    let (weapon_transform, mut weapon_timer) = weapon_query.single_mut();
+    let weapon_position = weapon_transform.translation.truncate();
+
+    weapon_timer.0.tick(time.delta());
+
+    if !mouse_button_input.pressed(MouseButton::Left) {
+        return;
+    }
+
+    if weapon_timer.0.elapsed_secs() >= PROJECTILE_SPAWN_INTERVAL {
+        weapon_timer.0.reset();
+
+        commands.spawn((
+            SpriteBundle {
+                texture: image_handle.0.clone().unwrap(),
+                transform: Transform::from_translation(vec3(
+                    weapon_position.x,
+                    weapon_position.y,
+                    1.0,
+                ))
+                .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+                ..default()
+            },
+            TextureAtlas {
+                layout: texture_atlas.0.clone().unwrap(),
+                index: 16,
+            },
+            Projectile,
+        ));
+    }
+}
+
+fn update_cursor_position(
+    mut cursor_position: ResMut<CursorPosition>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    camera_query: Query<(&Camera, &GlobalTransform), With<Camera>>,
+) {
+    if window_query.is_empty() || camera_query.is_empty() {
+        cursor_position.0 = None;
+    }
+
+    let (camera, camera_transform) = camera_query.single();
+    let window = window_query.single();
+
+    cursor_position.0 = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
 }
 
 fn update_weapon_transform(

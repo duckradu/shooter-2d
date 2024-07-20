@@ -246,6 +246,7 @@ fn handle_player_input(
 
     if delta.is_finite() && (up_key || right_key || down_key || left_key) {
         transform.translation += vec3(delta.x, delta.y, 0.0) * PLAYER_SPEED;
+        transform.translation.z = 10.0;
     }
 }
 
@@ -357,11 +358,7 @@ fn update_weapon_transform(
         player_position.y + offset * angle.sin() - 15.0,
     );
 
-    weapon_transform.translation = vec3(
-        new_weapon_position.x,
-        new_weapon_position.y,
-        weapon_transform.translation.z,
-    );
+    weapon_transform.translation = vec3(new_weapon_position.x, new_weapon_position.y, 15.0);
 }
 
 fn update_projectile(

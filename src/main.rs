@@ -1,4 +1,5 @@
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::math::vec3;
 use bevy::prelude::*;
 
 const WINDOW_WIDTH: f32 = 1200.0;
@@ -14,6 +15,9 @@ const SPRITE_SCALE_FACTOR: f32 = 3.0;
 
 const TILE_WIDTH: usize = 16;
 const TILE_HEIGHT: usize = 16;
+
+// Player
+const PLAYER_SPEED: f32 = 2.0;
 
 // Resources
 #[derive(Resource)]
@@ -65,6 +69,7 @@ fn main() {
         // Systems
         .add_systems(OnEnter(GameState::Loading), load_assets)
         .add_systems(OnEnter(GameState::Bootstraping), (setup_camera, init_world))
+        .add_systems(Update, (handle_input).run_if(in_state(GameState::Playing)))
         // .add_systems(Startup, (setup_camera, spawn_player))
         .run();
 }
@@ -99,6 +104,7 @@ fn init_world(
     mut commands: Commands,
     texture_atlas: Res<GlobalTextureAtlasHandle>,
     image_handle: Res<GlobalSpriteSheetHandle>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     commands.spawn((
         SpriteBundle {
@@ -112,4 +118,47 @@ fn init_world(
         },
         Player,
     ));
+
+    next_state.set(GameState::Playing);
+}
+
+fn handle_input(
+    mut player_query: Query<&mut Transform, With<Player>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let mut transform = player_query.single_mut();
+
+    let up_key: bool =
+        keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp);
+    let right_key: bool =
+        keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight);
+    let down_key: bool =
+        keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown);
+    let left_key: bool =
+        keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft);
+
+    let mut delta = Vec2::ZERO;
+
+    if up_key {
+        delta.y += 1.0;
+    }
+    if down_key {
+        delta.y -= 1.0;
+    }
+    if left_key {
+        delta.x -= 1.0;
+    }
+    if right_key {
+        delta.x += 1.0;
+    }
+
+    delta = delta.normalize();
+
+    if delta.is_finite() && (up_key || right_key || down_key || left_key) {
+        transform.translation += vec3(delta.x, delta.y, 0.0) * PLAYER_SPEED;
+    }
 }

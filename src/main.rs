@@ -5,6 +5,7 @@ use bevy::math::{vec2, vec3};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::window::PrimaryWindow;
+use rand::Rng;
 
 // Window
 const WINDOW_WIDTH: f32 = 1200.0;
@@ -22,6 +23,11 @@ const SPRITE_SCALE_FACTOR: f32 = 3.0;
 // Tiles
 const TILE_WIDTH: usize = 16;
 const TILE_HEIGHT: usize = 16;
+
+// World
+const WORLD_W: f32 = 3000.0;
+const WORLD_H: f32 = 2500.0;
+const NUM_WORLD_DECORATIONS: usize = 1000;
 
 // Player
 const PLAYER_SPEED: f32 = 2.0;
@@ -96,7 +102,10 @@ fn main() {
         .init_state::<GameState>()
         // Systems
         .add_systems(OnEnter(GameState::Loading), load_assets)
-        .add_systems(OnEnter(GameState::Bootstraping), (setup_camera, init_world))
+        .add_systems(
+            OnEnter(GameState::Bootstraping),
+            (setup_camera, init_world, decorate_world),
+        )
         .add_systems(
             Update,
             (
@@ -170,6 +179,32 @@ fn init_world(
     ));
 
     next_state.set(GameState::Playing);
+}
+
+fn decorate_world(
+    mut commands: Commands,
+    texture_atlas: Res<GlobalTextureAtlasHandle>,
+    image_handle: Res<GlobalSpriteSheetHandle>,
+) {
+    let mut rng = rand::thread_rng();
+
+    for _ in 0..NUM_WORLD_DECORATIONS {
+        let x = rng.gen_range(-WORLD_W..WORLD_W);
+        let y = rng.gen_range(-WORLD_H..WORLD_H);
+
+        commands.spawn((
+            SpriteBundle {
+                texture: image_handle.0.clone().unwrap(),
+                transform: Transform::from_translation(vec3(x, y, 0.0))
+                    .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+                ..default()
+            },
+            TextureAtlas {
+                layout: texture_atlas.0.clone().unwrap(),
+                index: rng.gen_range(24..=25),
+            },
+        ));
+    }
 }
 
 fn handle_player_input(

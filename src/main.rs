@@ -2,6 +2,7 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use shooter2d::camera::FollowCameraPlugin;
+use shooter2d::enemy::EnemyPlugin;
 use shooter2d::player::PlayerPlugin;
 use shooter2d::state::GameState;
 use shooter2d::weapon::WeaponPlugin;
@@ -41,6 +42,7 @@ fn main() {
             WorldPlugin,
             PlayerPlugin,
             WeaponPlugin,
+            EnemyPlugin,
         ))
         .run();
 }

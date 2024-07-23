@@ -4,7 +4,7 @@ use rand::Rng;
 use crate::{
     animation::AnimationTimer,
     constants::*,
-    player::Player,
+    player::{Player, PlayerState},
     state::GameState,
     weapon::{Weapon, WeaponTimer},
     GlobalTextureAtlas,
@@ -37,6 +37,7 @@ fn init_world(
             index: 0,
         },
         Player,
+        PlayerState::default(),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
     ));
     commands.spawn((

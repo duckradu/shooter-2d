@@ -1,6 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{player::Player, state::GameState, weapon::Weapon, CursorPosition};
+use crate::{
+    constants::*,
+    player::{Player, PlayerState},
+    state::GameState,
+    weapon::Weapon,
+    CursorPosition,
+};
 
 pub struct AnimationPlugin;
 
@@ -29,7 +35,13 @@ fn animation_timer_tick(
 fn animate_player(
     cursor_position: Res<CursorPosition>,
     mut player_query: Query<
-        (&mut TextureAtlas, &mut Sprite, &Transform, &AnimationTimer),
+        (
+            &mut TextureAtlas,
+            &mut Sprite,
+            &Transform,
+            &PlayerState,
+            &AnimationTimer,
+        ),
         With<Player>,
     >,
 ) {
@@ -37,10 +49,16 @@ fn animate_player(
         return;
     }
 
-    let (mut texture, mut sprite, transform, timer) = player_query.single_mut();
+    let (mut texture_atlas, mut sprite, transform, player_state, timer) = player_query.single_mut();
 
     if timer.just_finished() {
-        texture.index = (texture.index + 1) % 2;
+        let base_sprite_index = match player_state {
+            PlayerState::Idle => 0,
+            PlayerState::Moving => 4,
+        };
+
+        texture_atlas.index =
+            base_sprite_index + (texture_atlas.index + 1) % (SPRITE_SHEET_WIDTH / 2);
     }
 
     if let Some(cursor_position) = cursor_position.0 {

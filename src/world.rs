@@ -2,6 +2,7 @@ use bevy::{math::vec3, prelude::*, time::Stopwatch};
 use rand::Rng;
 
 use crate::{
+    animation::AnimationTimer,
     constants::*,
     player::Player,
     state::GameState,
@@ -36,6 +37,7 @@ fn init_world(
             index: 0,
         },
         Player,
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
     ));
     commands.spawn((
         SpriteBundle {

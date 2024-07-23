@@ -1,6 +1,7 @@
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
+use shooter2d::animation::AnimationPlugin;
 use shooter2d::camera::FollowCameraPlugin;
 use shooter2d::enemy::EnemyPlugin;
 use shooter2d::player::PlayerPlugin;
@@ -38,6 +39,7 @@ fn main() {
         // Game plugins
         .add_plugins((
             ResourcesPlugin,
+            AnimationPlugin,
             FollowCameraPlugin,
             WorldPlugin,
             PlayerPlugin,

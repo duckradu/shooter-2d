@@ -3,6 +3,7 @@ use bevy::prelude::*;
 
 use shooter2d::animation::AnimationPlugin;
 use shooter2d::camera::FollowCameraPlugin;
+use shooter2d::collision::CollisionPlugin;
 use shooter2d::enemy::EnemyPlugin;
 use shooter2d::player::PlayerPlugin;
 use shooter2d::state::GameState;
@@ -42,6 +43,7 @@ fn main() {
             AnimationPlugin,
             FollowCameraPlugin,
             WorldPlugin,
+            CollisionPlugin,
             PlayerPlugin,
             WeaponPlugin,
             EnemyPlugin,

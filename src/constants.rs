@@ -26,8 +26,10 @@ pub const PLAYER_SPEED: f32 = 2.0;
 // Projectile
 pub const PROJECTILE_SPAWN_INTERVAL: f32 = 0.1;
 pub const PROJECTILE_SPEED: f32 = 15.0;
+pub const PROJECTILE_DAMAGE: f32 = 50.0;
 
 // Enemy
 pub const MAX_NUM_ENEMIES: usize = 500;
 pub const ENEMY_SPAWN_INTERVAL: f32 = 1.0;
 pub const ENEMY_SPEED: f32 = 1.0;
+pub const ENEMY_HEALTH: f32 = 100.0;

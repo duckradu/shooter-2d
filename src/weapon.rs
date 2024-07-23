@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Instant};
 
 use bevy::{
     math::{vec2, vec3},
@@ -17,7 +17,10 @@ pub struct Weapon;
 pub struct WeaponTimer(pub Stopwatch);
 
 #[derive(Component)]
-struct Projectile;
+pub struct Projectile;
+
+#[derive(Component)]
+pub struct SpawnInstant(Instant);
 
 #[derive(Component)]
 struct ProjectileDirection(Vec3);
@@ -30,6 +33,7 @@ impl Plugin for WeaponPlugin {
                 update_weapon_transform,
                 handle_weapon_input,
                 update_projectile,
+                despawn_old_projectiles,
             )
                 .run_if(in_state(GameState::Playing)),
         );
@@ -106,6 +110,7 @@ fn handle_weapon_input(
                 layout: handle.layout.clone().unwrap(),
                 index: 16,
             },
+            SpawnInstant(Instant::now()),
             Projectile,
             ProjectileDirection(*projectile_direction),
         ));
@@ -122,5 +127,16 @@ fn update_projectile(
     for (mut t, dir) in projectile_query.iter_mut() {
         t.translation += dir.0.normalize() * Vec3::splat(PROJECTILE_SPEED);
         t.translation.z = 10.0;
+    }
+}
+
+fn despawn_old_projectiles(
+    mut commands: Commands,
+    projectile_query: Query<(&SpawnInstant, Entity), With<Projectile>>,
+) {
+    for (instant, entity) in projectile_query.iter() {
+        if instant.0.elapsed().as_secs_f32() > 0.4 {
+            commands.entity(entity).despawn();
+        }
     }
 }

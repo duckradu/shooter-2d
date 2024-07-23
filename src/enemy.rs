@@ -8,7 +8,17 @@ use crate::{animation::AnimationTimer, player::Player, state::GameState, *};
 pub struct EnemyPlugin;
 
 #[derive(Component)]
-pub struct Enemy;
+pub struct Enemy {
+    pub health: f32,
+}
+
+impl Default for Enemy {
+    fn default() -> Self {
+        Self {
+            health: ENEMY_HEALTH,
+        }
+    }
+}
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
@@ -17,6 +27,7 @@ impl Plugin for EnemyPlugin {
             (
                 spawn_enemy_wave.run_if(on_timer(Duration::from_secs_f32(ENEMY_SPAWN_INTERVAL))),
                 update_enemy_transform,
+                despawn_dead_enemies,
             )
                 .run_if(in_state(GameState::Playing)),
         );
@@ -53,7 +64,7 @@ fn spawn_enemy_wave(
                 layout: handle.layout.clone().unwrap(),
                 index: 12,
             },
-            Enemy,
+            Enemy::default(),
             AnimationTimer(Timer::from_seconds(0.08, TimerMode::Repeating)),
         ));
     }
@@ -73,5 +84,17 @@ fn update_enemy_transform(
         let dir = (player_position - transform.translation).normalize();
 
         transform.translation += dir * ENEMY_SPEED;
+    }
+}
+
+fn despawn_dead_enemies(mut commands: Commands, enemy_query: Query<(&Enemy, Entity), With<Enemy>>) {
+    if enemy_query.is_empty() {
+        return;
+    }
+
+    for (enemy, entity) in enemy_query.iter() {
+        if enemy.health <= 0.0 {
+            commands.entity(entity).despawn()
+        }
     }
 }

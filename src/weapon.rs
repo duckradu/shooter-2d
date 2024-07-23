@@ -5,6 +5,7 @@ use bevy::{
     prelude::*,
     time::Stopwatch,
 };
+use rand::Rng;
 
 use crate::{player::Player, state::GameState, *};
 
@@ -93,27 +94,36 @@ fn handle_weapon_input(
     if weapon_timer.0.elapsed_secs() >= PROJECTILE_SPAWN_INTERVAL {
         weapon_timer.0.reset();
 
+        let mut rng = rand::thread_rng();
         let projectile_direction = weapon_transform.local_x();
 
-        commands.spawn((
-            SpriteBundle {
-                texture: handle.image.clone().unwrap(),
-                transform: Transform::from_translation(vec3(
-                    weapon_position.x,
-                    weapon_position.y,
-                    1.0,
-                ))
-                .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
-                ..default()
-            },
-            TextureAtlas {
-                layout: handle.layout.clone().unwrap(),
-                index: 16,
-            },
-            SpawnInstant(Instant::now()),
-            Projectile,
-            ProjectileDirection(*projectile_direction),
-        ));
+        for _ in 0..3 {
+            let direction = vec3(
+                projectile_direction.x + rng.gen_range(-0.5..0.5),
+                projectile_direction.y + rng.gen_range(-0.5..0.5),
+                projectile_direction.z,
+            );
+
+            commands.spawn((
+                SpriteBundle {
+                    texture: handle.image.clone().unwrap(),
+                    transform: Transform::from_translation(vec3(
+                        weapon_position.x,
+                        weapon_position.y,
+                        1.0,
+                    ))
+                    .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: handle.layout.clone().unwrap(),
+                    index: 16,
+                },
+                SpawnInstant(Instant::now()),
+                Projectile,
+                ProjectileDirection(direction),
+            ));
+        }
     }
 }
 

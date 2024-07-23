@@ -37,7 +37,7 @@ impl Plugin for EnemyPlugin {
 fn get_random_spawn_position(pos: Vec2) -> (f32, f32) {
     let mut rng = rand::thread_rng();
     let angle = rng.gen_range(0.0..PI * 2.0);
-    let distance = rng.gen_range(100.0..2000.0);
+    let distance = rng.gen_range(1000.0..5000.0);
 
     let offset_x = angle.cos() * distance;
     let offset_y = angle.sin() * distance;

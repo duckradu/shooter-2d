@@ -135,7 +135,7 @@ fn despawn_old_projectiles(
     projectile_query: Query<(&SpawnInstant, Entity), With<Projectile>>,
 ) {
     for (instant, entity) in projectile_query.iter() {
-        if instant.0.elapsed().as_secs_f32() > 0.4 {
+        if instant.0.elapsed().as_secs_f32() > 0.3 {
             commands.entity(entity).despawn();
         }
     }

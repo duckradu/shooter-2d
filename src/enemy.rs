@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::{math::vec3, prelude::*, time::common_conditions::on_timer};
 use rand::Rng;
@@ -34,24 +34,39 @@ impl Plugin for EnemyPlugin {
     }
 }
 
+fn get_random_spawn_position(pos: Vec2) -> (f32, f32) {
+    let mut rng = rand::thread_rng();
+    let angle = rng.gen_range(0.0..PI * 2.0);
+    let distance = rng.gen_range(100.0..2000.0);
+
+    let offset_x = angle.cos() * distance;
+    let offset_y = angle.sin() * distance;
+
+    let random_x = pos.x + offset_x;
+    let random_y = pos.y + offset_y;
+
+    (random_x, random_y)
+}
+
 fn spawn_enemy_wave(
     mut commands: Commands,
     handle: Res<GlobalTextureAtlas>,
     player_query: Query<&Transform, With<Player>>,
     enemy_query: Query<&Transform, (With<Enemy>, Without<Player>)>,
 ) {
+    let enemy_spawn_rate_per_second = 10;
+
     let num_enemies = enemy_query.iter().len();
-    let enemy_spawn_count = (MAX_NUM_ENEMIES - num_enemies).min(10);
+    let enemy_spawn_count = (MAX_NUM_ENEMIES - num_enemies).min(enemy_spawn_rate_per_second);
 
     if num_enemies >= MAX_NUM_ENEMIES || player_query.is_empty() {
         return;
     }
 
-    let mut rng = rand::thread_rng();
+    let player_position = player_query.single().translation.truncate();
 
     for _ in 0..enemy_spawn_count {
-        let x = rng.gen_range(-WORLD_W..WORLD_W);
-        let y = rng.gen_range(-WORLD_H..WORLD_H);
+        let (x, y) = get_random_spawn_position(player_position);
 
         commands.spawn((
             SpriteBundle {

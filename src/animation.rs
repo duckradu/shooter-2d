@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     constants::*,
+    enemy::Enemy,
     player::{Player, PlayerState},
     state::GameState,
     weapon::Weapon,
@@ -17,7 +18,13 @@ impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (animation_timer_tick, animate_player, animate_weapon)
+            (
+                animation_timer_tick,
+                animate_player,
+                flip_player_sprite_x,
+                flip_weapon_sprite_y,
+                flip_enemy_sprite_x,
+            )
                 .run_if(in_state(GameState::Playing)),
         );
     }
@@ -33,23 +40,13 @@ fn animation_timer_tick(
 }
 
 fn animate_player(
-    cursor_position: Res<CursorPosition>,
-    mut player_query: Query<
-        (
-            &mut TextureAtlas,
-            &mut Sprite,
-            &Transform,
-            &PlayerState,
-            &AnimationTimer,
-        ),
-        With<Player>,
-    >,
+    mut player_query: Query<(&mut TextureAtlas, &PlayerState, &AnimationTimer), With<Player>>,
 ) {
     if player_query.is_empty() {
         return;
     }
 
-    let (mut texture_atlas, mut sprite, transform, player_state, timer) = player_query.single_mut();
+    let (mut texture_atlas, player_state, timer) = player_query.single_mut();
 
     if timer.just_finished() {
         let base_sprite_index = match player_state {
@@ -60,13 +57,39 @@ fn animate_player(
         texture_atlas.index =
             base_sprite_index + (texture_atlas.index + 1) % (SPRITE_SHEET_WIDTH / 2);
     }
+}
+
+fn flip_player_sprite_x(
+    cursor_position: Res<CursorPosition>,
+    mut player_query: Query<(&mut Sprite, &Transform), With<Player>>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let (mut sprite, transform) = player_query.single_mut();
 
     if let Some(cursor_position) = cursor_position.0 {
         sprite.flip_x = cursor_position.x < transform.translation.x;
     }
 }
 
-fn animate_weapon(
+fn flip_enemy_sprite_x(
+    player_query: Query<&Transform, With<Player>>,
+    mut enemy_query: Query<(&mut Sprite, &Transform), With<Enemy>>,
+) {
+    if player_query.is_empty() || enemy_query.is_empty() {
+        return;
+    }
+
+    let player_position = player_query.single().translation;
+
+    for (mut sprite, transform) in enemy_query.iter_mut() {
+        sprite.flip_x = transform.translation.x > player_position.x
+    }
+}
+
+fn flip_weapon_sprite_y(
     cursor_position: Res<CursorPosition>,
     mut weapon_query: Query<(&mut Sprite, &Transform), With<Weapon>>,
 ) {

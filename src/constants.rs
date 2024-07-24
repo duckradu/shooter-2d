@@ -33,3 +33,6 @@ pub const MAX_NUM_ENEMIES: usize = 500;
 pub const ENEMY_SPAWN_INTERVAL: f32 = 1.0;
 pub const ENEMY_SPEED: f32 = 1.0;
 pub const ENEMY_HEALTH: f32 = 100.0;
+
+// Kd Tree
+pub const KD_TREE_UPDATE_RATE: f32 = 0.2;

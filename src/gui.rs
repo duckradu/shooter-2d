@@ -3,7 +3,12 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{enemy::Enemy, state::GameState};
+use crate::{
+    enemy::Enemy,
+    player::{Health, Player},
+    state::GameState,
+    world::GameEntity,
+};
 
 pub struct GUIPlugin;
 
@@ -96,24 +101,28 @@ fn spawn_debug_text(mut commands: Commands) {
             },
         ),
         DebugText,
+        GameEntity,
     ));
 }
 
 fn update_debug_text(
-    mut query: Query<&mut Text, With<DebugText>>,
+    mut debug_text_query: Query<&mut Text, With<DebugText>>,
     diagnostics: Res<DiagnosticsStore>,
+    player_query: Query<&Health, With<Player>>,
     enemy_query: Query<(), With<Enemy>>,
 ) {
-    if query.is_empty() {
+    if debug_text_query.is_empty() || player_query.is_empty() || enemy_query.is_empty() {
         return;
     }
 
+    let player_health = player_query.single().0;
     let num_enemies = enemy_query.iter().count();
-    let mut text = query.single_mut();
+
+    let mut text = debug_text_query.single_mut();
 
     if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(value) = fps.smoothed() {
-            text.sections[0].value = format!("{value:.2}\n{num_enemies}")
+            text.sections[0].value = format!("{value:.2}\n{num_enemies}\n{player_health}")
         }
     }
 }

@@ -3,7 +3,13 @@ use std::time::Duration;
 use bevy::{prelude::*, time::common_conditions::on_timer};
 use kd_tree::{KdPoint, KdTree};
 
-use crate::{constants::*, enemy::Enemy, state::GameState, weapon::Projectile};
+use crate::{
+    constants::*,
+    enemy::Enemy,
+    player::{Player, PlayerEnemyCollisionEvent},
+    state::GameState,
+    weapon::Projectile,
+};
 
 pub struct CollisionPlugin;
 
@@ -13,6 +19,7 @@ impl Plugin for CollisionPlugin {
             Update,
             (
                 handle_projectile_enemy_collision,
+                handle_player_enemy_collision,
                 update_enemy_kd_tree.run_if(on_timer(Duration::from_secs_f32(KD_TREE_UPDATE_RATE))),
             )
                 .run_if(in_state(GameState::Playing)),
@@ -74,14 +81,35 @@ fn handle_projectile_enemy_collision(
     }
 
     for projectile_transform in projectile_query.iter() {
-        let position = projectile_transform.translation;
+        let projectile_position = projectile_transform.translation;
 
-        let enemies = tree.0.within_radius(&[position.x, position.y], 50.0);
+        let enemies = tree
+            .0
+            .within_radius(&[projectile_position.x, projectile_position.y], 50.0);
 
         for e in enemies {
             if let Ok(mut enemy) = enemy_query.get_mut(e.entity) {
                 enemy.health -= PROJECTILE_DAMAGE;
             }
         }
+    }
+}
+
+fn handle_player_enemy_collision(
+    player_query: Query<&Transform, With<Player>>,
+    tree: Res<EnemyKdTree>,
+    mut events: EventWriter<PlayerEnemyCollisionEvent>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let player_position = player_query.single().translation;
+    let enemies = tree
+        .0
+        .within_radius(&[player_position.x, player_position.y], 50.0);
+
+    for _ in enemies.iter() {
+        events.send(PlayerEnemyCollisionEvent);
     }
 }

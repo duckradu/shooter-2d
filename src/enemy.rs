@@ -3,7 +3,7 @@ use std::{f32::consts::PI, time::Duration};
 use bevy::{math::vec3, prelude::*, time::common_conditions::on_timer};
 use rand::Rng;
 
-use crate::{animation::AnimationTimer, player::Player, state::GameState, *};
+use crate::{animation::AnimationTimer, player::Player, state::GameState, world::GameEntity, *};
 
 pub struct EnemyPlugin;
 
@@ -81,6 +81,7 @@ fn spawn_enemy_wave(
             },
             Enemy::default(),
             AnimationTimer(Timer::from_seconds(0.08, TimerMode::Repeating)),
+            GameEntity,
         ));
     }
 }

@@ -4,11 +4,14 @@ use rand::Rng;
 use crate::{
     animation::AnimationTimer,
     constants::*,
-    player::{Player, PlayerState},
+    player::{Health, Player, PlayerState},
     state::GameState,
     weapon::{Weapon, WeaponTimer},
     GlobalTextureAtlas,
 };
+
+#[derive(Component)]
+pub struct GameEntity;
 
 pub struct WorldPlugin;
 
@@ -17,7 +20,8 @@ impl Plugin for WorldPlugin {
         app.add_systems(
             OnEnter(GameState::Bootstraping),
             (init_world, decorate_world),
-        );
+        )
+        .add_systems(OnExit(GameState::Playing), despawn_game_entities);
     }
 }
 
@@ -39,6 +43,8 @@ fn init_world(
         Player,
         PlayerState::default(),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Health(PLAYER_HEALTH),
+        GameEntity,
     ));
     commands.spawn((
         SpriteBundle {
@@ -52,6 +58,7 @@ fn init_world(
         },
         Weapon,
         WeaponTimer(Stopwatch::new()),
+        GameEntity,
     ));
 
     next_state.set(GameState::Playing);
@@ -75,6 +82,16 @@ fn decorate_world(mut commands: Commands, handle: Res<GlobalTextureAtlas>) {
                 layout: handle.layout.clone().unwrap(),
                 index: rng.gen_range(24..=25),
             },
+            GameEntity,
         ));
+    }
+}
+
+fn despawn_game_entities(
+    mut commands: Commands,
+    game_entities_query: Query<Entity, With<GameEntity>>,
+) {
+    for e in game_entities_query.iter() {
+        commands.entity(e).despawn_recursive()
     }
 }

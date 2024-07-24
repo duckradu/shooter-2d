@@ -7,6 +7,9 @@ pub struct PlayerPlugin;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component)]
+pub struct Health(pub f32);
+
 #[derive(Component, Default)]
 pub enum PlayerState {
     #[default]
@@ -16,9 +19,14 @@ pub enum PlayerState {
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.add_event::<PlayerEnemyCollisionEvent>().add_systems(
             Update,
-            handle_player_input.run_if(in_state(GameState::Playing)),
+            (
+                handle_player_input,
+                handle_player_enemy_collision_events,
+                handle_player_death,
+            )
+                .run_if(in_state(GameState::Playing)),
         );
     }
 }
@@ -66,5 +74,38 @@ fn handle_player_input(
         *player_state = PlayerState::Moving;
     } else {
         *player_state = PlayerState::Idle;
+    }
+}
+
+#[derive(Event)]
+pub struct PlayerEnemyCollisionEvent;
+
+fn handle_player_enemy_collision_events(
+    mut player_query: Query<&mut Health, With<Player>>,
+    mut events: EventReader<PlayerEnemyCollisionEvent>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let mut health = player_query.single_mut();
+
+    for _ in events.read() {
+        health.0 -= ENEMY_DAMAGE
+    }
+}
+
+fn handle_player_death(
+    player_query: Query<&Health, With<Player>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let health = player_query.single();
+
+    if health.0 <= 0.0 {
+        next_state.set(GameState::Menu)
     }
 }

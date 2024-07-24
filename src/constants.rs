@@ -21,6 +21,7 @@ pub const WORLD_H: f32 = 2500.0;
 pub const NUM_WORLD_DECORATIONS: usize = 1000;
 
 // Player
+pub const PLAYER_HEALTH: f32 = 100.0;
 pub const PLAYER_SPEED: f32 = 2.0;
 
 // Projectile
@@ -31,8 +32,9 @@ pub const PROJECTILE_DAMAGE: f32 = 50.0;
 // Enemy
 pub const MAX_NUM_ENEMIES: usize = 500;
 pub const ENEMY_SPAWN_INTERVAL: f32 = 1.0;
-pub const ENEMY_SPEED: f32 = 1.0;
 pub const ENEMY_HEALTH: f32 = 100.0;
+pub const ENEMY_SPEED: f32 = 1.0;
+pub const ENEMY_DAMAGE: f32 = 1.0;
 
 // Kd Tree
 pub const KD_TREE_UPDATE_RATE: f32 = 0.2;

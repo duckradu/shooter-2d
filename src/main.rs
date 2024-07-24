@@ -5,6 +5,7 @@ use shooter2d::animation::AnimationPlugin;
 use shooter2d::camera::FollowCameraPlugin;
 use shooter2d::collision::CollisionPlugin;
 use shooter2d::enemy::EnemyPlugin;
+use shooter2d::gui::GUIPlugin;
 use shooter2d::player::PlayerPlugin;
 use shooter2d::state::GameState;
 use shooter2d::weapon::WeaponPlugin;
@@ -40,6 +41,7 @@ fn main() {
         // Game plugins
         .add_plugins((
             ResourcesPlugin,
+            GUIPlugin,
             AnimationPlugin,
             FollowCameraPlugin,
             WorldPlugin,

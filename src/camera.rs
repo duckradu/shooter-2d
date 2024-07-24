@@ -8,7 +8,7 @@ pub struct FollowCameraPlugin;
 impl Plugin for FollowCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(PanCamPlugin::default())
-            .add_systems(OnEnter(GameState::Bootstraping), setup_camera)
+            .add_systems(OnEnter(GameState::Loading), setup_camera)
             .add_systems(
                 Update,
                 update_camera_position.run_if(in_state(GameState::Playing)),

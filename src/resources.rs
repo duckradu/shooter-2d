@@ -52,7 +52,7 @@ fn load_assets(
 
     handle.layout = Some(texture_atlas_layouts.add(texture_atlas_layout));
 
-    next_state.set(GameState::Bootstraping)
+    next_state.set(GameState::Menu)
 }
 
 fn update_cursor_position(
